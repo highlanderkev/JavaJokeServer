@@ -6,3 +6,5 @@ Build with
 
 Then run with 
 > $ java filename
+
+Start the JokeServer first then the JokeClient.
