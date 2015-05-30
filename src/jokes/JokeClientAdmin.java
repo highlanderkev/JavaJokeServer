@@ -2,6 +2,7 @@
  * JokeClient.java
  * Attributed to Elliott, after Hughes, Shoffner, Winslow with alterations by Westropp
  */
+package jokes;
 
 import java.io.*;
 import java.net.*;

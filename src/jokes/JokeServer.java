@@ -2,10 +2,16 @@
  * JokeServer.java
  * Attributed to Elliott, after Hughes, Shoffner, Winslow with alterations by Westropp
  */
+package jokes;
 
 import java.io.*;
 import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.net.ssl.SSLServerSocket;
 
 /**
  * Status class holds data elements for storing the state of the communication
@@ -88,7 +94,7 @@ class AdminLooper implements Runnable {
         Socket adsock;
 
         try {
-            ServerSocket servsock = new ServerSocket(port, q_len);
+            ServerSocket servsock = new ServerSocket(port, q_len) {};
             while (adminControlSwitch) {
                 //wait for the next ADMIN client connection */
                 adsock = servsock.accept();
@@ -151,7 +157,7 @@ class AdminWorker extends Thread {
                         out.println("Please send final shutdown request to server.");
                     } else {
                         // otherwise the mode will switch depending on the command */
-                        System.out.println("Server is now set to " + mode + "mode.");
+                        System.out.println("Server is now set to " + mode + " mode.");
                         JokeServer.changeServerMode(mode);
                     }
                 } catch (IOException x) {
@@ -521,18 +527,6 @@ public class JokeServer {
     private static int serverMode = 1; // 1 joke mode; 2 proverb mode; 3 maintenance mode */
 
     /**
-     * Flushes or clears the array back to false, changes the indices back to
-     * false which means the joke/proverb has not been told yet.
-     *
-     * @param record Boolean array
-     */
-    public static void flushArray(Boolean[] record) {
-        for (int i = 0; i < 5; i++) {
-            record[i] = false;
-        }
-    }
-
-    /**
      * This method checks the HashMap of user States and reports back if it is a
      * new user or not.
      *
@@ -625,6 +619,32 @@ public class JokeServer {
         return temp;
     }
 
+    private static void writeToDisk(File toFile){
+        try{
+            OutputStream file = new FileOutputStream(toFile);
+            OutputStream buffer = new BufferedOutputStream(file);
+            ObjectOutput output = new ObjectOutputStream(buffer);
+            output.writeObject(userStates);
+        }catch(IOException x){
+            System.out.println("Error in writing to disk.");
+            x.printStackTrace();
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private static void readFromDisk(File fromFile) throws ClassNotFoundException {
+        try{
+            InputStream file = new FileInputStream(fromFile);
+            InputStream buffer = new BufferedInputStream(file);
+            ObjectInputStream input = new ObjectInputStream(buffer);
+            userStates = (HashMap<String, Status>) input.readObject();
+            input.close();
+        }catch(IOException x){
+            System.out.println("Error in writing to disk.");
+            x.printStackTrace();
+        }
+    }
+            
     /**
      * Main method which starts the server to loop and accept incoming
      * connections.
@@ -635,7 +655,7 @@ public class JokeServer {
         int q_len = 6; // Number of requests for OpSys to queue */
         int port = 1699; // start listening on port 1699 */
         Socket sock; // intialize Socket variable sock */
-
+        
         // create a different thread for admin clients */
         AdminLooper AL = new AdminLooper();
         Thread t = new Thread(AL);
